@@ -8,9 +8,10 @@ Current features:
   - Increase/decrease score for either red or yellow side
   - A start/stop button for the timer
   - A slightly buggy reset option
+  - Countdown time in minutes
  
 Planned features:
-  - Timer setup
+  - Countdown/count-up switcher
   - Team color picker
   - A reset function that doesn't have slight bugs
   - Possibly a way to save the score of every match to a cloud service but this one's just a possibility for a future time
