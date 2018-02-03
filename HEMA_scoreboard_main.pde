@@ -1,78 +1,125 @@
-int crveni, zuti, sekunde, minute;
-int bojaTajmera;
+//DELAYS USED TO AVOID GETTING MULTIPLE CLICKS AT ONCE
+
+int crveni, zuti, sekunde, minute, longPressTime, startingMinute = 3;
+int bojaTajmera, red = #FF0505, yellow = #FFFF00;
 int tajmerSec = 0, pocVrijeme = 0;
 String vrijeme, pauziranoVrijeme;
-boolean pauza = false;
+boolean pauza = false, pressedLong = false;
+
+PImage pauseBtn;
+PImage playBtn;
+
 void setup()
 {
   sekunde = 0;
+  minute = startingMinute; 
   pocVrijeme = millis();
   size(displayWidth, displayHeight); 
-  zuti = 0;
-  crveni = 0;
+  zuti = 0;   //RED STARTING SCORE
+  crveni = 0; //YELLOW STARTING SCORE
   noStroke();
-  minute = 0;
-  bojaTajmera = 255;
+  bojaTajmera = 255;  
+  
+  pauseBtn = loadImage("pause.png");
+  playBtn = loadImage("play.png");
+  
+  pauseBtn.resize(displayWidth*2/10, displayWidth*2/10);
+  playBtn.resize(displayWidth*2/10, displayWidth*2/10);
 }
+
 void draw()
 {
   klik();
-  //POZADINA
+  //BACKGROUND STUFF
   background(0);
-  fill(#FF0505);
+  fill(red); 
   rect(0,0,displayWidth/2,displayHeight/2);
-  fill(#FFFF00);
+  fill(yellow); 
   rect(displayWidth/2,0,displayWidth/2,displayHeight/2);
   textSize(displayHeight/5);
   textAlign(CENTER, CENTER);
   if(pauza == true)
   {
-    fill(#FF0505);
+    fill(red);
     rect(0,displayHeight*7/8,displayWidth,displayHeight);
   }
-  //ZUTI SIMBOLI
-  fill(#FFFF00);
+  //YELLOW STUFF
+  fill(yellow);
   text(zuti, displayWidth/4, displayHeight/4);
   textSize(displayHeight/8);
   text("+", displayWidth/4, displayHeight/14);
   text("-", displayWidth/4, displayHeight/2-displayHeight/12);
   
-  //CRVENI SIMBOLI
-  fill(#FF0505);
+  //RED STUFF
+  fill(red);
   textSize(displayHeight/5);
   text(crveni, displayWidth - displayWidth/4, displayHeight/4);
   textSize(displayHeight/8);
   text("+", displayWidth*3/4, displayHeight/14);
   text("-", displayWidth*3/4, displayHeight/2-displayHeight/12);
   
-  //TAMJER
+  //TIMER
   fill(bojaTajmera);
-  textSize(displayWidth/3);  
-  text(tajmer(), displayWidth/2,displayHeight-(displayHeight-displayWidth/2)/3 );
+  textSize(displayWidth/4);  
+  textAlign(CENTER, CENTER);
+  text(tajmer(), displayWidth*4/10,displayHeight*3/4);
+  textAlign(LEFT, TOP);
+  text("+", 0, height/2);
+  text("-", 0, height*7/8);
+  //PAUSE BUTTON
+  if(pauza == true)
+  {
+    imageMode(CENTER);
+    image(playBtn, displayWidth*8/9, displayHeight*3/4);
+  }
+  else if(pauza == false)
+  {
+    imageMode(CENTER);
+    image(pauseBtn, displayWidth*8/9, displayHeight*3/4);
+  }
 }
 String tajmer()
 {
   if(pauza == false)
   {
-    if(millis() - pocVrijeme >= 1000)
+    if(sekunde != 00 && millis() - pocVrijeme >= 1000)
     {
       sekunde--;
       pocVrijeme = millis();
     }
-    if(sekunde == 00)
+    else if(sekunde == 00 && millis() - pocVrijeme >= 1000)
     {
       minute--;
-      sekunde = 0;
+      sekunde = 59;
+      pocVrijeme = millis();
     }
-    if(sekunde<10)
+    if(minute == 0 && sekunde == 0)
+    {
+      vrijeme = "00:00";
+      pauza = true;
+    }
+    
+    //don't go into negatives with the timer
+    if(minute < 0)
+      minute = 0;
+    if(sekunde < 0)
+      sekunde = 0;
+    
+    //output formatting for timer string
+    else if(sekunde<10 && minute < 10)
       vrijeme = "0"+minute+":"+"0"+sekunde;
-    else
-      vrijeme = "0"+minute+":"+sekunde;
+    else if(sekunde<10 && minute >= 10)
+      vrijeme = minute+":"+"0"+sekunde;
+    else if(sekunde >= 10 && minute < 10)
+      vrijeme = "0"+minute+":"+ sekunde;
+    else if(sekunde >= 10 && minute >= 10)
+      vrijeme = minute+":"+ sekunde;
+     
     //if(minute == 2 && sekunde == 0)
     //{
     //  bojaTajmera = #FFBE00;
     //}
-    //else if(minute == 3 && sekunde == 0) OVO ODKOMENTIRATI AKO TIMER BUDE TREBAO RASTI
+    //else if(minute == 3 && sekunde == 0) USE FOR COLOR SWITCHING IF TIMER GOES UP
     //{
     //  bojaTajmera = #FF0000;
     //}
@@ -87,8 +134,8 @@ String tajmer()
 }
 void klik()
 {
-if(mousePressed)
-{
+  if(mousePressed)
+  {
       if(mouseX > 0 && mouseX < displayWidth/2 && mouseY <= displayHeight/8)
       {
        zuti++;
@@ -109,20 +156,58 @@ if(mousePressed)
        crveni--;
        delay(150);
       }
-      else if(mouseX > displayWidth/4 && mouseX < displayWidth-displayWidth/4 && mouseY > displayHeight-displayHeight/3)
+      else if(mouseX < width/8 && mouseY > height/2 && mouseY < height*13/20)
+      {
+        if(pauza == true)
+        {
+          pauza = false;
+          startingMinute++;
+          minute = startingMinute;
+          vrijeme = tajmer();
+          redraw();
+          pauza = true;
+        }
+        else
+        {
+          startingMinute++;
+          minute = startingMinute;
+          redraw();
+        }
+        delay(150);
+      }
+      else if(mouseX < width/8 && mouseY > height*8/9)
+      {
+        if(pauza == true)
+        {
+          pauza = false;
+          startingMinute--;
+          minute = startingMinute;
+          vrijeme = tajmer();
+          redraw();
+          pauza = true;
+        }
+        else
+        {
+          startingMinute--;
+          minute = startingMinute;
+          redraw();
+        }
+        delay(150);
+      }
+      else if(mouseX > displayWidth/8 && mouseX < displayWidth-displayWidth/4 && mouseY > displayHeight-displayHeight/3 && mouseY < displayHeight*7/8)
       {
        pauza = false;
        crveni = 0;
        zuti = 0;
        sekunde = 0;
-       minute = 0;
+       minute = startingMinute;              //RESET DIO
        bojaTajmera = 255;
        vrijeme = tajmer();
        redraw();       
-       delay(150);
        pauza = true;
+       delay(150);
     }
-      else if(mouseX > displayWidth*3/4 && mouseX < displayWidth && mouseY > displayHeight-displayHeight/3)
+      else if(mouseX > displayWidth*3/4 && mouseX < displayWidth && mouseY > displayHeight-displayHeight/3 && mouseY < displayHeight*7/8)
       {
         if(pauza == false)
         {
@@ -135,5 +220,5 @@ if(mousePressed)
           delay(150); 
         }
       }
-} 
+  } 
 }
